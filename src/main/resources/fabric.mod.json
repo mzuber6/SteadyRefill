@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "steadyrefill",
+  "version": "${version}",
+  "name": "Steady Refill",
+  "description": "Refills depleted hands without interrupting held Use or Attack bindings.",
+  "authors": ["mzuber"],
+  "environment": "client",
+  "license": "MIT",
+  "mixins": ["steady-refill.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25"
+  },
+  "breaks": {"hotbarautofill": "*"}
+}
