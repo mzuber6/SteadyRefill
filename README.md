@@ -5,7 +5,7 @@ Fabric API is not required. Servers need no installation.
 
 ## Install
 
-Remove HotbarAutoFill and put `steady-refill-1.0.1.jar` from `build/libs/`
+Remove HotbarAutoFill and put `steady-refill-1.0.2.jar` from `build/libs/`
 into your Minecraft instance's `mods` folder. The loader prevents running both
 refill mods together because the old one would still release your Use key.
 
@@ -16,6 +16,9 @@ refill mods together because the old one would still release your Use key.
 - Keeps vanilla held-use timing: no new click is required after a refill.
 - Searches the main inventory first, then other hotbar slots; never takes the
   item from your other hand. Matching includes item components.
+- If a different pickup occupies the slot after the last stackable item is used,
+  swaps the refill into the hand and preserves the pickup in the source slot.
+  Normal use remainders (buckets, bowls, bottles) are left alone.
 - Uses ordinary inventory swaps without opening a screen or touching the cursor.
 - Stops handling refills in menus, while unfocused, and when no matching items remain.
 - Only refills stacks emptied during use/mining. Does not refill intentional drops,
@@ -37,7 +40,10 @@ This is a separate implementation, not a modified copy of HotbarAutoFill.
 5. Release Use immediately after refill; use must stop normally.
 6. Open inventory/chat/pause while holding Use; no refill should run in a menu.
 7. Remove spare stacks; depletion should leave the hand empty without looping.
-8. Repeat on the actual multiplayer server to check its inventory synchronization.
+8. Use the last bone meal while standing on dropped logs/sticks. If a pickup
+   fills the depleted slot, verify bone meal returns and the pickup is preserved.
+9. Swap hands manually while holding Use; verify the mod does not undo the swap.
+10. Repeat on the actual multiplayer server to check its inventory synchronization.
 
 Build and automated slot-selection regression checks pass locally. The tree-farm
 checks above require a running game and have not been performed automatically.

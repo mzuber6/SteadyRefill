@@ -1,6 +1,7 @@
 package io.github.mzuber.steadyrefill;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ContainerInput;
@@ -34,15 +35,19 @@ public record HandRefill(LocalPlayer player, int selected, ItemStack main, ItemS
 
     private void refillHand(Minecraft client, ItemStack previous, int target) {
         var inventory = player.getInventory();
-        if (previous.isEmpty() || !inventory.getItem(target).isEmpty()) {
+        ItemStack current = inventory.getItem(target);
+        if (!RefillDecision.shouldRefill(previous.getCount(), previous.getMaxStackSize(),
+                previous.has(DataComponents.USE_REMAINDER), current.isEmpty(),
+                ItemStack.isSameItemSameComponents(previous, current))) {
             return;
         }
         // Main inventory first, then other hotbar slots. Never steal the other hand.
         int source = RefillSlots.findSource(selected, target,
                 slot -> ItemStack.isSameItemSameComponents(previous, inventory.getItem(slot)));
         if (source >= 0) {
-            // Vanilla number-key/offhand swap: cursor stays empty and the server
-            // receives an ordinary inventory action. No screen or input changes.
+            // SWAP also preserves a pickup that arrived in the depleted slot:
+            // it moves into the source slot while the refill moves into the hand.
+            // The cursor, selected slot, and held inputs remain untouched.
             client.gameMode.handleContainerInput(player.inventoryMenu.containerId,
                     RefillSlots.menuSlot(source), target, ContainerInput.SWAP, player);
         }

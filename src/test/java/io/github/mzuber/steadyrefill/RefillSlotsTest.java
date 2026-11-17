@@ -13,6 +13,18 @@ public final class RefillSlotsTest {
         for (int slot = 0; slot < 36; slot++) {
             check(RefillSlots.menuSlot(slot) == (slot < 9 ? slot + 36 : slot), "slot mapping");
         }
+        check(RefillDecision.shouldRefill(1, 64, false, false, false),
+                "pickup in depleted slot must allow refill");
+        check(RefillDecision.shouldRefill(1, 64, false, true, false), "empty final stack");
+        check(!RefillDecision.shouldRefill(0, 64, false, false, false), "no previous item");
+        check(!RefillDecision.shouldRefill(1, 64, false, false, true),
+                "matching pickup already refilled hand");
+        check(!RefillDecision.shouldRefill(2, 64, false, false, false),
+                "different item without final-item depletion must be left alone");
+        check(!RefillDecision.shouldRefill(1, 1, false, false, false),
+                "unstackable transformation must be left alone");
+        check(!RefillDecision.shouldRefill(1, 16, true, false, false),
+                "bottles and other use remainders must be left alone");
         System.out.println("All refill slot regression checks passed.");
     }
 

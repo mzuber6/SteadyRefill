@@ -16,7 +16,9 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "startUseItem", at = @At("HEAD"))
     private void steadyrefill$beforeUse(CallbackInfo ci) {
-        steadyrefill$use = HandRefill.capture((Minecraft) (Object) this);
+        Minecraft client = (Minecraft) (Object) this;
+        steadyrefill$use = client.options.keySwapOffhand.isDown() || client.options.keyDrop.isDown()
+                ? null : HandRefill.capture(client);
     }
 
     @Inject(method = "startUseItem", at = @At("RETURN"))
@@ -35,7 +37,8 @@ public abstract class MinecraftMixin {
         boolean acting = client.options.keyUse.isDown() || client.options.keyAttack.isDown()
                 || (client.player != null && client.player.isUsingItem());
         HandRefill current = HandRefill.capture(client);
-        if (current == null || client.options.keyDrop.isDown()) {
+        if (current == null || client.options.keyDrop.isDown()
+                || client.options.keySwapOffhand.isDown()) {
             steadyrefill$tick = null;
             steadyrefill$recentActionTicks = 0;
             return;
@@ -55,7 +58,8 @@ public abstract class MinecraftMixin {
     private void steadyrefill$afterTick(CallbackInfo ci) {
         if (steadyrefill$tick != null) {
             Minecraft client = (Minecraft) (Object) this;
-            if (steadyrefill$recentActionTicks > 0) {
+            if (steadyrefill$recentActionTicks > 0 && !client.options.keySwapOffhand.isDown()
+                    && !client.options.keyDrop.isDown()) {
                 steadyrefill$tick.refill(client);
             }
             steadyrefill$tick = HandRefill.capture(client);
