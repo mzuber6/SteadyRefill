@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MinecraftMixin {
     @Unique private HandRefill steadyrefill$use;
     @Unique private HandRefill steadyrefill$tick;
+    @Unique private int steadyrefill$recentActionTicks;
 
     @Inject(method = "startUseItem", at = @At("HEAD"))
     private void steadyrefill$beforeUse(CallbackInfo ci) {
@@ -29,17 +30,35 @@ public abstract class MinecraftMixin {
     @Inject(method = "tick", at = @At("HEAD"))
     private void steadyrefill$beforeTick(CallbackInfo ci) {
         Minecraft client = (Minecraft) (Object) this;
-        // Tick snapshots also cover eating completion and tools breaking during mining.
+        // Server-authoritative items (including bone meal) can become empty
+        // between ticks. Compare against the previous tick BEFORE taking a new copy.
         boolean acting = client.options.keyUse.isDown() || client.options.keyAttack.isDown()
                 || (client.player != null && client.player.isUsingItem());
-        steadyrefill$tick = acting ? HandRefill.capture(client) : null;
+        HandRefill current = HandRefill.capture(client);
+        if (current == null || client.options.keyDrop.isDown()) {
+            steadyrefill$tick = null;
+            steadyrefill$recentActionTicks = 0;
+            return;
+        }
+        if (acting) {
+            steadyrefill$recentActionTicks = 4;
+        } else if (steadyrefill$recentActionTicks > 0) {
+            steadyrefill$recentActionTicks--;
+        }
+        if (steadyrefill$tick != null && steadyrefill$recentActionTicks > 0) {
+            steadyrefill$tick.refill(client);
+        }
+        steadyrefill$tick = HandRefill.capture(client);
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void steadyrefill$afterTick(CallbackInfo ci) {
         if (steadyrefill$tick != null) {
-            steadyrefill$tick.refill((Minecraft) (Object) this);
-            steadyrefill$tick = null;
+            Minecraft client = (Minecraft) (Object) this;
+            if (steadyrefill$recentActionTicks > 0) {
+                steadyrefill$tick.refill(client);
+            }
+            steadyrefill$tick = HandRefill.capture(client);
         }
     }
 }

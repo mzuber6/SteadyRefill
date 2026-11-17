@@ -5,7 +5,7 @@ Fabric API is not required. Servers need no installation.
 
 ## Install
 
-Remove HotbarAutoFill and put `steady-refill-1.0.0.jar` from `build/libs/`
+Remove HotbarAutoFill and put `steady-refill-1.0.1.jar` from `build/libs/`
 into your Minecraft instance's `mods` folder. The loader prevents running both
 refill mods together because the old one would still release your Use key.
 
